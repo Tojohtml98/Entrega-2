@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # API REST - E-commerce
 
 API REST para la gestión de productos y carritos de compra desarrollada con Node.js y Express.
@@ -230,3 +231,6 @@ Puedes probar todos los endpoints usando Postman o cualquier cliente HTTP de tu 
 ## Licencia
 
 ISC
+=======
+# Entrega-1
+>>>>>>> 781739ca549ca621637075eeeaf4ca53d270f063
