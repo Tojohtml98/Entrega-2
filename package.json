@@ -1,0 +1,21 @@
+{
+  "name": "new-proyect",
+  "version": "1.0.0",
+  "description": "API REST para gestión de productos y carritos de compra",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "keywords": [
+    "api",
+    "express",
+    "ecommerce"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
