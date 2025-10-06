@@ -1,21 +1,22 @@
 {
-  "name": "new-proyect",
+  "name": "ecommerce-api",
   "version": "1.0.0",
-  "description": "API REST para gestión de productos y carritos de compra",
+  "description": "",
   "main": "src/app.js",
   "type": "module",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "node --watch src/app.js"
+    "dev": "nodemon src/app.js"
   },
-  "keywords": [
-    "api",
-    "express",
-    "ecommerce"
-  ],
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.18.2",
+    "joi": "^17.11.0",
+    "express-joi-validation": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
