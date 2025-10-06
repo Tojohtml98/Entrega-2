@@ -1,6 +1,10 @@
 import express from 'express';
-import productsRouter from './routes/products.router.js';
-import cartsRouter from './routes/carts.router.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+import { errorHandler } from './middlewares/validation.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 8080;
@@ -8,10 +12,6 @@ const PORT = 8080;
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Rutas
-app.use('/api/products', productsRouter);
-app.use('/api/carts', cartsRouter);
 
 // Ruta raíz
 app.get('/', (req, res) => {
@@ -24,18 +24,26 @@ app.get('/', (req, res) => {
     });
 });
 
-// Manejo de rutas no encontradas
+// Importar y usar rutas
+import productsRouter from './routes/products.router.js';
+import cartsRouter from './routes/carts.router.js';
+
+app.use('/api/products', productsRouter);
+app.use('/api/carts', cartsRouter);
+
+// Ruta para manejar rutas no encontradas
 app.use((req, res) => {
     res.status(404).json({
         status: 'error',
-        message: 'Ruta no encontrada'
+        message: 'Ruta no encontrada',
+        path: req.path
     });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`Servidor escuchando en el puerto ${PORT}`);
-    console.log(`http://localhost:${PORT}`);
-});
+// Manejador de errores global
+app.use(errorHandler);
 
-export default app;
+// Iniciar el servidor
+app.listen(PORT, () => {
+    console.log(`Servidor escuchando en http://localhost:${PORT}`);
+});

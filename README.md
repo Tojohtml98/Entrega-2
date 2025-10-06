@@ -1,14 +1,17 @@
-<<<<<<< HEAD
 # API REST - E-commerce
 
 API REST para la gestión de productos y carritos de compra desarrollada con Node.js y Express.
 
 ## Características
 
-- Gestión completa de productos (CRUD)
-- Gestión de carritos de compra
-- Persistencia de datos en archivos JSON
-- IDs autogenerados para productos y carritos
+- ✅ Gestión completa de productos (CRUD)
+- ✅ Gestión de carritos de compra
+- ✅ Persistencia de datos en archivos JSON
+- ✅ IDs autogenerados (UUID) para productos y carritos
+- ✅ Validación de datos con Joi
+- ✅ Manejo de errores consistente con códigos HTTP apropiados
+- ✅ Validación de stock y existencia de productos
+- ✅ Incremento automático de cantidad si el producto ya está en el carrito
 
 ## Requisitos
 
@@ -67,7 +70,7 @@ Obtiene un producto por su ID.
 ```
 
 #### POST `/api/products`
-Crea un nuevo producto.
+Crea un nuevo producto con validación completa.
 
 **Body:**
 ```json
@@ -75,17 +78,26 @@ Crea un nuevo producto.
   "title": "Producto de ejemplo",
   "description": "Descripción del producto",
   "code": "PROD001",
-  "price": 100,
+  "price": 100.50,
   "status": true,
   "stock": 50,
   "category": "Categoría",
-  "thumbnails": ["url1", "url2"]
+  "thumbnails": ["https://example.com/image1.jpg"]
 }
 ```
 
 **Campos requeridos:** `title`, `description`, `code`, `price`, `stock`, `category`
 
 **Campos opcionales:** `status` (default: true), `thumbnails` (default: [])
+
+**Validaciones:**
+- `title`: 1-100 caracteres
+- `description`: 1-500 caracteres
+- `code`: 1-20 caracteres, único
+- `price`: número positivo con 2 decimales
+- `stock`: entero no negativo
+- `category`: 1-50 caracteres
+- `thumbnails`: array de URLs válidas
 
 **Respuesta:**
 ```json
@@ -96,18 +108,22 @@ Crea un nuevo producto.
 }
 ```
 
+**Errores:**
+- `422`: Error de validación con detalles específicos
+- `409`: Código de producto duplicado
+
 #### PUT `/api/products/:pid`
 Actualiza un producto existente.
 
 **Body:** (campos a actualizar)
 ```json
 {
-  "price": 150,
+  "price": 150.75,
   "stock": 30
 }
 ```
 
-**Nota:** No se puede actualizar el campo `id`.
+**Validaciones:** Mismas que POST, pero todos los campos son opcionales
 
 **Respuesta:**
 ```json
@@ -117,6 +133,11 @@ Actualiza un producto existente.
   "payload": {...}
 }
 ```
+
+**Errores:**
+- `404`: Producto no encontrado
+- `422`: Error de validación
+- `409`: Código duplicado
 
 #### DELETE `/api/products/:pid`
 Elimina un producto.
@@ -130,6 +151,9 @@ Elimina un producto.
 }
 ```
 
+**Errores:**
+- `404`: Producto no encontrado
+
 ### Carritos (`/api/carts`)
 
 #### POST `/api/carts`
@@ -141,7 +165,7 @@ Crea un nuevo carrito vacío.
   "status": "success",
   "message": "Carrito creado exitosamente",
   "payload": {
-    "id": 1,
+    "id": "uuid-del-carrito",
     "products": []
   }
 }
@@ -150,15 +174,18 @@ Crea un nuevo carrito vacío.
 #### GET `/api/carts/:cid`
 Obtiene los productos de un carrito.
 
+**Validaciones:**
+- `cid`: Debe ser un UUID válido
+
 **Respuesta:**
 ```json
 {
   "status": "success",
   "payload": {
-    "id": 1,
+    "id": "uuid-del-carrito",
     "products": [
       {
-        "product": 1,
+        "productId": "uuid-del-producto",
         "quantity": 2
       }
     ]
@@ -166,8 +193,32 @@ Obtiene los productos de un carrito.
 }
 ```
 
+**Errores:**
+- `400`: UUID inválido
+- `404`: Carrito no encontrado
+
 #### POST `/api/carts/:cid/product/:pid`
 Agrega un producto al carrito. Si el producto ya existe, incrementa su cantidad.
+
+**Body:**
+```json
+{
+  "quantity": 2
+}
+```
+
+**Validaciones:**
+- `cid`: UUID válido del carrito
+- `pid`: UUID válido del producto
+- `quantity`: Entero mayor a 0 (default: 1)
+
+**Funcionalidades:**
+- ✅ Valida que el carrito existe
+- ✅ Valida que el producto existe
+- ✅ Verifica stock disponible
+- ✅ Si el producto ya está en el carrito, incrementa la cantidad
+- ✅ Si no está, lo agrega como nuevo item
+- ✅ Descuenta el stock del producto
 
 **Respuesta:**
 ```json
@@ -178,24 +229,57 @@ Agrega un producto al carrito. Si el producto ya existe, incrementa su cantidad.
 }
 ```
 
+**Errores:**
+- `400`: Parámetros inválidos o cantidad inválida
+- `404`: Carrito o producto no encontrado
+- `409`: Stock insuficiente (con detalles del stock disponible)
+
+## Manejo de Errores
+
+La API utiliza códigos de estado HTTP apropiados y mensajes de error consistentes:
+
+### Códigos de Estado
+
+- `200`: Operación exitosa
+- `201`: Recurso creado exitosamente
+- `400`: Error en los parámetros de la petición
+- `404`: Recurso no encontrado
+- `409`: Conflicto (código duplicado, stock insuficiente)
+- `422`: Error de validación de datos
+- `500`: Error interno del servidor
+
+### Formato de Errores
+
+```json
+{
+  "status": "error",
+  "message": "Descripción del error",
+  "errors": [
+    {
+      "field": "campo",
+      "message": "Mensaje específico del error",
+      "value": "valor proporcionado"
+    }
+  ]
+}
+```
+
 ## Estructura del Proyecto
 
 ```
-new-proyect/
-├── src/
-│   ├── managers/
-│   │   ├── ProductManager.js
-│   │   └── CartManager.js
-│   ├── routes/
-│   │   ├── products.router.js
-│   │   └── carts.router.js
-│   └── app.js
-├── data/
-│   ├── products.json
-│   └── carts.json
-├── package.json
-├── .gitignore
-└── README.md
+src/
+├── managers/
+│   ├── ProductManager.js      # Lógica de negocio para productos
+│   └── CartManager.js         # Lógica de negocio para carritos
+├── routes/
+│   ├── products.router.js     # Rutas de productos
+│   └── carts.router.js        # Rutas de carritos
+├── schemas/
+│   ├── productSchemas.js      # Esquemas de validación para productos
+│   └── cartSchemas.js         # Esquemas de validación para carritos
+├── middlewares/
+│   └── validation.js          # Middlewares de validación y manejo de errores
+└── app.js                     # Configuración principal de la aplicación
 ```
 
 ## Persistencia de Datos
@@ -206,31 +290,76 @@ Los datos se almacenan en archivos JSON en la carpeta `data/`:
 
 Estos archivos se crean automáticamente al iniciar el servidor si no existen.
 
+## Mejoras Implementadas
+
+Basado en el feedback recibido, se implementaron las siguientes mejoras:
+
+### ✅ Validación con Esquemas (Joi)
+- Esquemas completos para POST/PUT de productos
+- Validación de parámetros de ruta (UUIDs)
+- Validación de body para agregar productos al carrito
+
+### ✅ Manejo de Errores Mejorado
+- Códigos HTTP apropiados (400, 404, 409, 422)
+- Formato consistente de errores
+- Mensajes claros y específicos
+
+### ✅ Validación de Stock y Existencia
+- Verificación real de existencia de productos
+- Validación de stock disponible antes de agregar al carrito
+- Mensajes de error claros cuando no hay stock suficiente
+
+### ✅ Lógica de Carrito Mejorada
+- Si el producto ya está en el carrito, se incrementa la cantidad
+- No se duplican items en el carrito
+- Gestión automática del stock
+
 ## Pruebas con Postman
 
-Puedes probar todos los endpoints usando Postman o cualquier cliente HTTP de tu preferencia.
+Puedes probar todos los endpoints usando Postman o cualquier cliente HTTP.
 
 ### Ejemplo de flujo:
 
-1. Crear un producto:
-   - POST `http://localhost:8080/api/products`
-   - Body: JSON con los datos del producto
+1. **Crear un producto:**
+   ```
+   POST http://localhost:8080/api/products
+   Content-Type: application/json
+   
+   {
+     "title": "Laptop Gaming",
+     "description": "Laptop para gaming de alta gama",
+     "code": "LAP001",
+     "price": 1500.00,
+     "stock": 10,
+     "category": "Electrónicos"
+   }
+   ```
 
-2. Listar productos:
-   - GET `http://localhost:8080/api/products`
+2. **Listar productos:**
+   ```
+   GET http://localhost:8080/api/products
+   ```
 
-3. Crear un carrito:
-   - POST `http://localhost:8080/api/carts`
+3. **Crear un carrito:**
+   ```
+   POST http://localhost:8080/api/carts
+   ```
 
-4. Agregar producto al carrito:
-   - POST `http://localhost:8080/api/carts/1/product/1`
+4. **Agregar producto al carrito:**
+   ```
+   POST http://localhost:8080/api/carts/{cartId}/product/{productId}
+   Content-Type: application/json
+   
+   {
+     "quantity": 2
+   }
+   ```
 
-5. Ver el carrito:
-   - GET `http://localhost:8080/api/carts/1`
+5. **Ver el carrito:**
+   ```
+   GET http://localhost:8080/api/carts/{cartId}
+   ```
 
 ## Licencia
 
 ISC
-=======
-# Entrega-1
->>>>>>> 781739ca549ca621637075eeeaf4ca53d270f063

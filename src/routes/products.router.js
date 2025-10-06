@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import ProductManager from '../managers/ProductManager.js';
+import { createProductSchema, updateProductSchema } from '../schemas/productSchemas.js';
+import { validateSchema } from '../middlewares/validation.js';
 
 const router = Router();
 const productManager = new ProductManager();
@@ -46,7 +48,7 @@ router.get('/:pid', async (req, res) => {
 });
 
 // POST / - Agregar un nuevo producto
-router.post('/', async (req, res) => {
+router.post('/', validateSchema(createProductSchema), async (req, res, next) => {
     try {
         const productData = req.body;
         const newProduct = await productManager.addProduct(productData);
@@ -57,15 +59,13 @@ router.post('/', async (req, res) => {
             payload: newProduct
         });
     } catch (error) {
-        res.status(400).json({
-            status: 'error',
-            message: error.message
-        });
+        // El errorHandler se encargará de los códigos de estado apropiados
+        next(error);
     }
 });
 
 // PUT /:pid - Actualizar un producto
-router.put('/:pid', async (req, res) => {
+router.put('/:pid', validateSchema(updateProductSchema), async (req, res, next) => {
     try {
         const { pid } = req.params;
         const updateData = req.body;
@@ -78,11 +78,7 @@ router.put('/:pid', async (req, res) => {
             payload: updatedProduct
         });
     } catch (error) {
-        const statusCode = error.message === 'Producto no encontrado' ? 404 : 400;
-        res.status(statusCode).json({
-            status: 'error',
-            message: error.message
-        });
+        next(error);
     }
 });
 

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import CartManager from '../managers/CartManager.js';
+import { addProductToCartSchema, cartParamsSchema } from '../schemas/cartSchemas.js';
+import { validateSchema, validateParams } from '../middlewares/validation.js';
 
 const router = Router();
 const cartManager = new CartManager();
@@ -8,7 +10,6 @@ const cartManager = new CartManager();
 router.post('/', async (req, res) => {
     try {
         const newCart = await cartManager.createCart();
-        
         res.status(201).json({
             status: 'success',
             message: 'Carrito creado exitosamente',
@@ -23,7 +24,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET /:cid - Obtener los productos de un carrito
-router.get('/:cid', async (req, res) => {
+router.get('/:cid', async (req, res, next) => {
     try {
         const { cid } = req.params;
         const cart = await cartManager.getCartById(cid);
@@ -40,18 +41,19 @@ router.get('/:cid', async (req, res) => {
             payload: cart
         });
     } catch (error) {
-        res.status(500).json({
-            status: 'error',
-            message: error.message
-        });
+        next(error);
     }
 });
 
 // POST /:cid/product/:pid - Agregar un producto al carrito
-router.post('/:cid/product/:pid', async (req, res) => {
+router.post('/:cid/product/:pid', 
+    validateSchema(addProductToCartSchema), 
+    async (req, res, next) => {
     try {
         const { cid, pid } = req.params;
-        const updatedCart = await cartManager.addProductToCart(cid, pid);
+        const { quantity = 1 } = req.body;
+        
+        const updatedCart = await cartManager.addProductToCart(cid, pid, quantity);
         
         res.json({
             status: 'success',
@@ -59,11 +61,7 @@ router.post('/:cid/product/:pid', async (req, res) => {
             payload: updatedCart
         });
     } catch (error) {
-        const statusCode = error.message === 'Carrito no encontrado' ? 404 : 500;
-        res.status(statusCode).json({
-            status: 'error',
-            message: error.message
-        });
+        next(error);
     }
 });
 

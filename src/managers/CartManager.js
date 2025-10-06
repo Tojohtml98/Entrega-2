@@ -57,19 +57,22 @@ class CartManager {
     }
 
     async addProductToCart(cartId, productId, quantity = 1) {
-        // Validate quantity
-        if (!Number.isInteger(quantity) || quantity < 1) {
-            throw new Error('La cantidad debe ser un número entero mayor a 0');
-        }
+        // Check if cart exists first
+        await this.getCartById(cartId);
 
-        // Check if product exists and has enough stock
-        const product = await this.productManager.getProductById(productId);
-        if (!product) {
-            throw new Error('Producto no encontrado');
-        }
-
-        if (!(await this.productManager.hasStock(productId, quantity))) {
-            throw new Error('Stock insuficiente para el producto');
+        // Check if product exists
+        try {
+            const product = await this.productManager.getProductById(productId);
+            
+            // Check stock availability
+            if (!(await this.productManager.hasStock(productId, quantity))) {
+                throw new Error(`Stock insuficiente. Disponible: ${product.stock}, Solicitado: ${quantity}`);
+            }
+        } catch (error) {
+            if (error.message === 'Producto no encontrado') {
+                throw new Error('Producto no encontrado');
+            }
+            throw error;
         }
 
         const cart = await this.getCartById(cartId);

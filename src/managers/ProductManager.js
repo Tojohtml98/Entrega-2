@@ -1,4 +1,3 @@
-```
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -19,7 +18,6 @@ class ProductManager {
             const data = await fs.readFile(productsPath, 'utf-8');
             this.products = JSON.parse(data);
         } catch (error) {
-            // If file doesn't exist, initialize with empty array
             if (error.code === 'ENOENT') {
                 await this.saveProducts();
             } else {
@@ -57,7 +55,6 @@ class ProductManager {
     }
 
     async addProduct(productData) {
-        // Check if product with same code already exists
         if (await this.productExists(productData.code)) {
             throw new Error('Ya existe un producto con el mismo código');
         }
@@ -80,7 +77,6 @@ class ProductManager {
             throw new Error('Producto no encontrado');
         }
 
-        // Don't allow updating the product code to one that already exists
         if (updateData.code && updateData.code !== this.products[productIndex].code) {
             if (await this.productExists(updateData.code)) {
                 throw new Error('Ya existe otro producto con el mismo código');
