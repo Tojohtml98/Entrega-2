@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        .product-card {
+            transition: transform 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .form-container {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">E-commerce</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/home">Home</a>
+                <a class="nav-link active" href="/realtimeproducts">Tiempo Real</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Indicador de conexión -->
+    <div class="status-indicator">
+        <span id="connectionStatus" class="badge bg-secondary">Conectando...</span>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">{{title}}</h1>
+                
+                <!-- Formulario para agregar productos -->
+                <div class="form-container">
+                    <h3>Agregar Nuevo Producto</h3>
+                    <form id="productForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Título</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Precio</label>
+                                    <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="stock" class="form-label">Stock</label>
+                                    <input type="number" class="form-control" id="stock" name="stock" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Categoría</label>
+                                    <input type="text" class="form-control" id="category" name="category" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar Producto</button>
+                    </form>
+                </div>
+
+                <!-- Lista de productos -->
+                <div id="productsContainer">
+                    {{#if products.length}}
+                        <div class="row" id="productsList">
+                            {{#each products}}
+                            <div class="col-md-4 mb-4" data-product-id="{{id}}">
+                                <div class="card product-card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{title}}</h5>
+                                        <p class="card-text">{{description}}</p>
+                                        <ul class="list-unstyled">
+                                            <li><strong>Precio:</strong> ${{price}}</li>
+                                            <li><strong>Stock:</strong> {{stock}}</li>
+                                            <li><strong>Categoría:</strong> {{category}}</li>
+                                            <li><strong>ID:</strong> {{id}}</li>
+                                        </ul>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('{{id}}')">Eliminar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {{/each}}
+                        </div>
+                    {{else}}
+                        <div class="alert alert-info">
+                            <h4>No hay productos disponibles</h4>
+                            <p>No se encontraron productos en la base de datos.</p>
+                        </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configurar Socket.IO
+        const socket = io();
+        const connectionStatus = document.getElementById('connectionStatus');
+        const productForm = document.getElementById('productForm');
+        const productsList = document.getElementById('productsList');
+
+        // Manejar conexión
+        socket.on('connect', () => {
+            connectionStatus.textContent = 'Conectado';
+            connectionStatus.className = 'badge bg-success';
+        });
+
+        socket.on('disconnect', () => {
+            connectionStatus.textContent = 'Desconectado';
+            connectionStatus.className = 'badge bg-danger';
+        });
+
+        // Manejar actualizaciones de productos
+        socket.on('productsUpdated', (products) => {
+            updateProductsList(products);
+        });
+
+        // Manejar nuevo producto agregado
+        socket.on('productAdded', (product) => {
+            addProductToList(product);
+        });
+
+        // Manejar producto eliminado
+        socket.on('productDeleted', (productId) => {
+            removeProductFromList(productId);
+        });
+
+        // Enviar formulario
+        productForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(productForm);
+            const productData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                price: parseFloat(formData.get('price')),
+                stock: parseInt(formData.get('stock')),
+                category: formData.get('category')
+            };
+
+            socket.emit('addProduct', productData);
+            productForm.reset();
+        });
+
+        // Función para eliminar producto
+        function deleteProduct(productId) {
+            if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+                socket.emit('deleteProduct', productId);
+            }
+        }
+
+        // Función para actualizar la lista de productos
+        function updateProductsList(products) {
+            if (products.length === 0) {
+                productsList.innerHTML = `
+                    <div class="alert alert-info">
+                        <h4>No hay productos disponibles</h4>
+                        <p>No se encontraron productos en la base de datos.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            productsList.innerHTML = products.map(product => `
+                <div class="col-md-4 mb-4" data-product-id="${product.id}">
+                    <div class="card product-card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${product.title}</h5>
+                            <p class="card-text">${product.description}</p>
+                            <ul class="list-unstyled">
+                                <li><strong>Precio:</strong> $${product.price}</li>
+                                <li><strong>Stock:</strong> ${product.stock}</li>
+                                <li><strong>Categoría:</strong> ${product.category}</li>
+                                <li><strong>ID:</strong> ${product.id}</li>
+                            </ul>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Función para agregar producto a la lista
+        function addProductToList(product) {
+            if (productsList.querySelector('.alert')) {
+                productsList.innerHTML = '';
+            }
+            
+            const productElement = document.createElement('div');
+            productElement.className = 'col-md-4 mb-4';
+            productElement.setAttribute('data-product-id', product.id);
+            productElement.innerHTML = `
+                <div class="card product-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">${product.title}</h5>
+                        <p class="card-text">${product.description}</p>
+                        <ul class="list-unstyled">
+                            <li><strong>Precio:</strong> $${product.price}</li>
+                            <li><strong>Stock:</strong> ${product.stock}</li>
+                            <li><strong>Categoría:</strong> ${product.category}</li>
+                            <li><strong>ID:</strong> ${product.id}</li>
+                        </ul>
+                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">Eliminar</button>
+                    </div>
+                </div>
+            `;
+            
+            productsList.appendChild(productElement);
+        }
+
+        // Función para eliminar producto de la lista
+        function removeProductFromList(productId) {
+            const productElement = productsList.querySelector(`[data-product-id="${productId}"]`);
+            if (productElement) {
+                productElement.remove();
+            }
+            
+            // Si no hay productos, mostrar mensaje
+            if (productsList.children.length === 0) {
+                productsList.innerHTML = `
+                    <div class="alert alert-info">
+                        <h4>No hay productos disponibles</h4>
+                        <p>No se encontraron productos en la base de datos.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,11 +1,13 @@
-# API REST - E-commerce
+# E-commerce API con WebSockets
 
-API REST para la gestión de productos y carritos de compra desarrollada con Node.js y Express.
+API REST para la gestión de productos y carritos de compra desarrollada con Node.js, Express, Handlebars y Socket.IO.
 
 ## Características
 
 - ✅ Gestión completa de productos (CRUD)
 - ✅ Gestión de carritos de compra
+- ✅ **Vistas con Handlebars** (home y tiempo real)
+- ✅ **WebSockets con Socket.IO** para actualizaciones en tiempo real
 - ✅ Persistencia de datos en archivos JSON
 - ✅ IDs autogenerados (UUID) para productos y carritos
 - ✅ Validación de datos con Joi
@@ -37,6 +39,20 @@ npm start
 
 El servidor se ejecutará en `http://localhost:8080`
 
+## Vistas Disponibles
+
+### 🏠 Vista Home (`/home`)
+- Lista todos los productos en una interfaz web
+- Diseño responsive con Bootstrap
+- Navegación entre vistas
+
+### ⚡ Vista Tiempo Real (`/realtimeproducts`)
+- Lista de productos con actualizaciones en tiempo real
+- Formulario para agregar nuevos productos
+- Eliminación de productos con confirmación
+- Indicador de conexión WebSocket
+- Actualizaciones automáticas sin recargar la página
+
 ### Modo desarrollo (con auto-reload)
 
 ```bash
@@ -44,6 +60,12 @@ npm run dev
 ```
 
 ## Endpoints
+
+### Vistas Web
+- `GET /home` - Vista home con lista de productos
+- `GET /realtimeproducts` - Vista en tiempo real con WebSockets
+
+### API REST
 
 ### Productos (`/api/products`)
 
@@ -273,14 +295,38 @@ src/
 │   └── CartManager.js         # Lógica de negocio para carritos
 ├── routes/
 │   ├── products.router.js     # Rutas de productos
-│   └── carts.router.js        # Rutas de carritos
+│   ├── carts.router.js        # Rutas de carritos
+│   └── views.router.js        # Rutas de vistas web
 ├── schemas/
 │   ├── productSchemas.js      # Esquemas de validación para productos
 │   └── cartSchemas.js         # Esquemas de validación para carritos
 ├── middlewares/
 │   └── validation.js          # Middlewares de validación y manejo de errores
-└── app.js                     # Configuración principal de la aplicación
+├── views/                     # Plantillas Handlebars
+│   ├── home.handlebars        # Vista home
+│   └── realTimeProducts.handlebars  # Vista tiempo real
+└── app.js                     # Configuración principal con Socket.IO
 ```
+
+## WebSockets
+
+El proyecto incluye integración completa con Socket.IO para actualizaciones en tiempo real:
+
+### Eventos del Servidor
+- `productAdded`: Se emite cuando se agrega un nuevo producto
+- `productDeleted`: Se emite cuando se elimina un producto
+- `productsUpdated`: Se emite cuando se actualiza la lista de productos
+
+### Eventos del Cliente
+- `addProduct`: Envía datos de un nuevo producto al servidor
+- `deleteProduct`: Solicita la eliminación de un producto
+
+### Características WebSocket
+- ✅ Conexión automática al cargar la vista tiempo real
+- ✅ Indicador visual de estado de conexión
+- ✅ Actualizaciones en tiempo real sin recargar página
+- ✅ Sincronización entre múltiples clientes
+- ✅ Manejo de errores de conexión
 
 ## Persistencia de Datos
 

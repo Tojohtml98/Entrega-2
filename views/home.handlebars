@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-card {
+            transition: transform 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">E-commerce</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/home">Home</a>
+                <a class="nav-link" href="/realtimeproducts">Tiempo Real</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">{{title}}</h1>
+                
+                {{#if products.length}}
+                    <div class="row">
+                        {{#each products}}
+                        <div class="col-md-4 mb-4">
+                            <div class="card product-card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{title}}</h5>
+                                    <p class="card-text">{{description}}</p>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Precio:</strong> ${{price}}</li>
+                                        <li><strong>Stock:</strong> {{stock}}</li>
+                                        <li><strong>Categoría:</strong> {{category}}</li>
+                                        <li><strong>ID:</strong> {{id}}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                {{else}}
+                    <div class="alert alert-info">
+                        <h4>No hay productos disponibles</h4>
+                        <p>No se encontraron productos en la base de datos.</p>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -53,6 +53,12 @@ router.post('/', validateSchema(createProductSchema), async (req, res, next) => 
         const productData = req.body;
         const newProduct = await productManager.addProduct(productData);
         
+        // Emitir evento de Socket.IO si está disponible
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('productAdded', newProduct);
+        }
+        
         res.status(201).json({
             status: 'success',
             message: 'Producto creado exitosamente',
@@ -87,6 +93,12 @@ router.delete('/:pid', async (req, res) => {
     try {
         const { pid } = req.params;
         const deletedProduct = await productManager.deleteProduct(pid);
+        
+        // Emitir evento de Socket.IO si está disponible
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('productDeleted', pid);
+        }
         
         res.json({
             status: 'success',
