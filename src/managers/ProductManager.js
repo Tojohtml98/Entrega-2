@@ -55,6 +55,11 @@ class ProductManager {
     }
 
     async addProduct(productData) {
+        // Generate code if not provided
+        if (!productData.code) {
+            productData.code = `PROD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
         if (await this.productExists(productData.code)) {
             throw new Error('Ya existe un producto con el mismo código');
         }

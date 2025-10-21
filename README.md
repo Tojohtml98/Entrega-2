@@ -14,6 +14,8 @@ API REST para la gestión de productos y carritos de compra desarrollada con Nod
 - ✅ Manejo de errores consistente con códigos HTTP apropiados
 - ✅ Validación de stock y existencia de productos
 - ✅ Incremento automático de cantidad si el producto ya está en el carrito
+- ✅ **Optimización de performance** con instancia única de ProductManager
+- ✅ **Código limpio y mantenible** con estructura profesional
 
 ## Requisitos
 
@@ -338,8 +340,6 @@ Estos archivos se crean automáticamente al iniciar el servidor si no existen.
 
 ## Mejoras Implementadas
 
-Basado en el feedback recibido, se implementaron las siguientes mejoras:
-
 ### ✅ Validación con Esquemas (Joi)
 - Esquemas completos para POST/PUT de productos
 - Validación de parámetros de ruta (UUIDs)
@@ -359,6 +359,17 @@ Basado en el feedback recibido, se implementaron las siguientes mejoras:
 - Si el producto ya está en el carrito, se incrementa la cantidad
 - No se duplican items en el carrito
 - Gestión automática del stock
+
+### ✅ Optimización de Performance
+- **Instancia única de ProductManager**: Eliminación de imports dinámicos
+- **Mejor gestión de memoria**: Una sola instancia reutilizable
+- **Código más eficiente**: Eliminación de código redundante
+
+### ✅ Refactorización del Código
+- **Imports organizados**: Todos los imports al inicio del archivo
+- **Comentarios estructurados**: Secciones claramente delimitadas
+- **Flujo lógico mejorado**: Configuración → Middlewares → Rutas → Socket.IO
+- **Código más mantenible**: Estructura profesional y escalable
 
 ## Pruebas con Postman
 

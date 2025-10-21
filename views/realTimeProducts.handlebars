@@ -61,18 +61,26 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="price" class="form-label">Precio</label>
-                                    <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+                                    <label for="code" class="form-label">Código</label>
+                                    <input type="text" class="form-control" id="code" name="code" placeholder="Se generará automáticamente si se deja vacío">
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="price" class="form-label">Precio</label>
+                                    <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="stock" class="form-label">Stock</label>
                                     <input type="number" class="form-control" id="stock" name="stock" required>
                                 </div>
                             </div>
+                        </div>
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="category" class="form-label">Categoría</label>
@@ -102,6 +110,7 @@
                                             <li><strong>Precio:</strong> ${{price}}</li>
                                             <li><strong>Stock:</strong> {{stock}}</li>
                                             <li><strong>Categoría:</strong> {{category}}</li>
+                                            <li><strong>Código:</strong> {{code}}</li>
                                             <li><strong>ID:</strong> {{id}}</li>
                                         </ul>
                                         <button class="btn btn-danger btn-sm" onclick="deleteProduct('{{id}}')">Eliminar</button>
@@ -155,6 +164,11 @@
             removeProductFromList(productId);
         });
 
+        // Manejar errores
+        socket.on('error', (error) => {
+            alert('Error: ' + error.message);
+        });
+
         // Enviar formulario
         productForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -167,6 +181,12 @@
                 stock: parseInt(formData.get('stock')),
                 category: formData.get('category')
             };
+
+            // Solo incluir código si no está vacío
+            const code = formData.get('code').trim();
+            if (code) {
+                productData.code = code;
+            }
 
             socket.emit('addProduct', productData);
             productForm.reset();
@@ -201,6 +221,7 @@
                                 <li><strong>Precio:</strong> $${product.price}</li>
                                 <li><strong>Stock:</strong> ${product.stock}</li>
                                 <li><strong>Categoría:</strong> ${product.category}</li>
+                                <li><strong>Código:</strong> ${product.code}</li>
                                 <li><strong>ID:</strong> ${product.id}</li>
                             </ul>
                             <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">Eliminar</button>
@@ -228,6 +249,7 @@
                             <li><strong>Precio:</strong> $${product.price}</li>
                             <li><strong>Stock:</strong> ${product.stock}</li>
                             <li><strong>Categoría:</strong> ${product.category}</li>
+                            <li><strong>Código:</strong> ${product.code}</li>
                             <li><strong>ID:</strong> ${product.id}</li>
                         </ul>
                         <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">Eliminar</button>
